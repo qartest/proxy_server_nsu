@@ -7,7 +7,7 @@
 #include <condition_variable>
 
 #include "task.hpp"
-#include "my_exception.hpp"
+#include "../utils/my_exception.hpp"
 
 namespace thread{
 

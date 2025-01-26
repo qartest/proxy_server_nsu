@@ -10,10 +10,10 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "rezult_request.hpp"
-#include "rezult_response.hpp"
-#include "parser_http.hpp"
-#include "cache.hpp"
+#include "../rezult/rezult_request.hpp"
+#include "../rezult/rezult_response.hpp"
+#include "../utils/parser_http.hpp"
+#include "../cache/cache.hpp"
 
 namespace task{
     class task
@@ -30,8 +30,6 @@ namespace task{
         ssize_t readData(int fd, std::shared_ptr<char[]> buffer, ssize_t size);
         ssize_t send_data(int fd, char* buffer, ssize_t size);
         bool connect_to_server(int port, std::string_view host, int* sock);
-
-        void from_server_to_client(std::shared_ptr<char[]> buffer);
 
         void read_and_write_without_cache(std::shared_ptr<char[]> buffer, ssize_t data_from_server);
         void write_with_cash(std::shared_ptr<char[]> buffer, ssize_t data_from_server, std::shared_ptr<cache::cache_entry> cache_entry);

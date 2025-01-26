@@ -1,8 +1,8 @@
 #pragma once
-#include "my_exception.hpp"
+#include "../utils/my_exception.hpp"
 #include <memory>
-#include "thread_pool.hpp"
-#include "cache.hpp"
+#include "../thread/thread_pool.hpp"
+#include "../cache/cache.hpp"
 
 namespace Proxy{
     class Proxy{

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "rezult_request.hpp"
-#include "rezult_response.hpp"
+#include "../rezult/rezult_request.hpp"
+#include "../rezult/rezult_response.hpp"
 #include <string>
 #include <memory>
 #include <string_view>

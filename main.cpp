@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <string_view>
 
-#include "proxy.hpp"
+#include "proxy/proxy.hpp"
 
 size_t PORT = 8080;
 size_t THREADS = 4;

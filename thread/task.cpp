@@ -1,6 +1,6 @@
 #include "task.hpp"
 #include "iostream"
-#include "my_exception.hpp"
+#include "../utils/my_exception.hpp"
 
 
 
@@ -32,7 +32,6 @@ namespace task{
         }
         
         ssize_t first_read_data = readData(client, buffer, startBufferSize);
-        // std::cout << "READ CLIENT" << std::endl;
 
         if(first_read_data < 0){
             std::cout << "Ne prochital cho-ho" << std::endl;
@@ -48,7 +47,6 @@ namespace task{
         std::unique_ptr<answer::rezult_request> answer = parser::request::parser(data);
 
         if(!(answer -> get_GET() && answer -> get_version() && (answer -> get_host() != ""))){
-            // std::cout << "Ploxo s zaprosom" << std::endl << "get is " << answer -> get_GET() << std::endl << "version is " << answer->get_version() << std::endl << "host is " << answer ->get_host() << std::endl;
             throw error::MyException("Bad request");
         }
 
@@ -65,14 +63,11 @@ namespace task{
             }
         
             if(is_download){
-                // std::cout << "READ FROM CACHE WITHOT WRITE" << std::endl;
                 read_from_cache_without_write( now_cache);
             }
-            else{
-                // std::cout << "READ FROM CACHE WITH WRITE" << std::endl;
+            else{;
                 read_from_cache_with_write(now_cache);
             }
-            // std::cout << "RETAKE CASH" << std::endl;
             
         }
          else{
@@ -110,7 +105,6 @@ namespace task{
             if(server_answer -> get_200() && server_answer -> get_version()){
                 
                 if(server_answer -> get_size() > 0){
-                    // std::cout << "WRITE WITH CASH" << std::endl;
                     std::shared_ptr<cache::cache_entry> cache_entry = my_cache -> add_entry(key, server_answer -> get_header() + server_answer -> get_size());
 
                     if(cache_entry == nullptr){
@@ -122,20 +116,13 @@ namespace task{
                     }
 
                 }else{
-                    // std::cout << "WRITE WITHOUT CASH" << std::endl;
                     read_and_write_without_cache(buffer, data_from_server);
                 }
             }else{
                 read_and_write_without_cache(buffer, data_from_server);
             }
-
-            // std::cout << "WRITE WITHOUT CASH" << std::endl;
-
-
-            // std::cout << "WRITE FINISHED" << std::endl;
         }
 
-        std::cout << "TASK FINISHED" << std::endl;
     }
 
 
@@ -168,8 +155,6 @@ namespace task{
             if(remainder == 0){
                 continue;
             }
-
-            // std::cout << "I READ " << current_read << std::endl;
             {
                 std::shared_lock<std::shared_mutex> lock(now_cache -> data_manager -> rw_mutex);
                 if(send_data(client, now_cache -> data.get() + current_read, remainder) != remainder){
@@ -203,7 +188,6 @@ namespace task{
         if(send_data(client, buffer.get(), data_from_server) != data_from_server){
             is_client_connect = false;
             close(client);
-            // std::cout << "CLOSE CLIENT" << std::endl;
         }
 
 
@@ -224,8 +208,6 @@ namespace task{
                 cache_entry -> data_manager -> set_current_data(data_from_server);
 
                 write_to_cash += data_from_server;
-
-                // std::cout << "I WRITE " << write_to_cash << std::endl;
             }
 
             if(is_client_connect){
@@ -236,7 +218,6 @@ namespace task{
                 }
             }
         }
-
         {
             cache_entry -> data_manager -> is_download = true;
         }
@@ -280,17 +261,6 @@ namespace task{
             }
         }while((now_data_size = readData(server, buffer, startBufferSize)) > 0);
 
-    }
-
-    void task :: from_server_to_client(std::shared_ptr<char[]> buffer){
-        ssize_t data_from_server;
-        while ((data_from_server = readData(server, buffer, startBufferSize)) >= 0)
-        {
-            if(send_data(client, buffer.get(), data_from_server) != data_from_server){
-                return;
-            }
-        }
-        
     }
 
     ssize_t task :: readData(int fd, std::shared_ptr<char[]> buffer, ssize_t size){
@@ -391,8 +361,6 @@ namespace task{
             *sock = -1;
             return false;
         }
-
-        // std::cout << "Connected to server: " << host << ":" << port << "\n";
         return true;
     }
 

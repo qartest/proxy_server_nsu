@@ -21,14 +21,13 @@ namespace thread{
                 if(!run){
                     break;
                 }
-                std::cout << "TASK STARTED" << std::endl;
                 task = std::move(tasks.front());
                 tasks.pop();
             }
             try{
                 task -> run();
             } catch (error::MyException& e){
-                std::cout << "Task terminated" << e.what() << std::endl;
+                std::cout << "Task terminated\n" << e.what() << std::endl;
             }
             
         }
