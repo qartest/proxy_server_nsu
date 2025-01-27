@@ -67,6 +67,15 @@ namespace parser{
             }
             return false;
         }
+        bool is_300_code(std::string_view input) {
+            size_t start = input.find(' ');
+            if (start == std::string_view::npos || start + 3 > input.size()) {
+                return false; 
+            }
+
+            return input[start + 1] == '3' && input[start + 2] >= '0' && input[start + 2] <= '9';
+        }
+
 
         bool is_200_code(std::string_view input){
             size_t start = input.find(' ') + 1;
@@ -98,6 +107,31 @@ namespace parser{
             }
         }
 
+        std::string_view getLocation(std::string_view input){
+            std::string_view hostPrefix = "Location: ";
+
+            size_t hostPos = input.find(hostPrefix);
+            if (hostPos == std::string_view::npos) {
+                return "";
+            }
+
+            hostPos += hostPrefix.length();
+
+            size_t endPos = input.find("\r\n", hostPos);
+            if (endPos == std::string_view::npos) {
+                return "";  
+            }
+            std::string_view host = input.substr(hostPos, endPos - hostPos);
+
+            size_t protocolPos = host.find("://");
+            if (protocolPos != std::string_view::npos) {
+                host.remove_prefix(protocolPos + 3);
+            }
+
+            return host;
+
+        }
+
         ssize_t get_header_size(std::string_view response){
 
             size_t header_end = response.find("\r\n\r\n");
@@ -109,7 +143,7 @@ namespace parser{
         
 
         std::unique_ptr<answer::rezult_response> parser(std::string_view input){
-            return std::make_unique<answer::rezult_response>(is_200_code(input), isNormalVersion(input), size_body(input), get_header_size(input));
+            return std::make_unique<answer::rezult_response>(is_200_code(input), isNormalVersion(input), size_body(input), get_header_size(input), is_300_code(input), getLocation(input));
         }
     }
 }

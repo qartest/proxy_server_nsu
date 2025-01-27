@@ -38,6 +38,8 @@ namespace task{
         void read_from_cache_with_write(std::shared_ptr<cache::cache_entry> now_cache);
 
         bool set_non_blocking(int socket);
+
+        std::unique_ptr<answer::rezult_response> connect_to_server_first_time_with_reddirect(std::string_view host, std::shared_ptr<char[]> buffer, ssize_t data_from_client, std::shared_ptr<char[]> client_buffer, ssize_t* data_from_server, int ogr);
     public:
 
         void run();

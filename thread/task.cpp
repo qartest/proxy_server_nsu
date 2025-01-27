@@ -20,16 +20,55 @@ namespace task{
 
         return true;
     }
-    
+    std::unique_ptr<answer::rezult_response> task::connect_to_server_first_time_with_reddirect(std::string_view host, std::shared_ptr<char[]> buffer, ssize_t data_from_client, std::shared_ptr<char[]> client_buffer, ssize_t* data_from_server, int ogr){
+            if(ogr > 5){
+                throw error::MyException("A lot of reddirect");
+            }
+
+            if(!connect_to_server(80, host, &server)){
+                std::cout << "Ne poluchiloc' podkluychit'cay" << std::endl;
+                throw error::MyException("Big cock");
+            }
+            if(!send_data(server, client_buffer.get(), data_from_client)){
+                std::cout << "Problem s otpravkoy severu" << std::endl;
+                throw error::MyException("1 send to server problem");
+            }
+
+            if(!set_non_blocking(server)){
+                std::cout << "server not non_blocking" << std::endl;
+                throw error::MyException("server");
+            }
+
+            *data_from_server = readData(server, buffer, startBufferSize);
+
+            if(*data_from_server <= 0 || data_from_server == nullptr){
+                throw error::MyException("Server don't answer first time");
+            }
+
+            if(*data_from_server != startBufferSize){
+                buffer[*data_from_server] = '\0';
+            }
+            
+            std::string_view data1 = buffer.get();
+
+            std::unique_ptr<answer::rezult_response> server_answer = parser::response::parser(data1);
+            
+            if(server_answer -> get_300()){
+                return connect_to_server_first_time_with_reddirect(std::string_view(server_answer -> get_location()), buffer, data_from_client, client_buffer, data_from_server, ogr+ 1);
+            }
+
+            return server_answer;
+
+    }
     void task::run(){
-        std::shared_ptr<char[]> buffer = std::shared_ptr<char[]>(new char[startBufferSize], std::default_delete<char[]>());
+        std::shared_ptr<char[]> buffer1 = std::shared_ptr<char[]>(new char[startBufferSize], std::default_delete<char[]>());
 
         if(!set_non_blocking(client)){
             std::cout << "Client not non_blocking" << std::endl;
             throw error::MyException("Cl");
         }
         
-        ssize_t first_read_data = readData(client, buffer, startBufferSize);
+        ssize_t first_read_data = readData(client, buffer1, startBufferSize);
 
         if(first_read_data < 0){
             std::cout << "Ne prochital cho-ho" << std::endl;
@@ -37,10 +76,10 @@ namespace task{
         }
 
         if(first_read_data != startBufferSize){
-            buffer.get()[first_read_data] = '\0';
+            buffer1.get()[first_read_data] = '\0';
         }
 
-        std::string_view data = buffer.get();
+        std::string_view data = buffer1.get();
 
         std::unique_ptr<answer::rezult_request> answer = parser::request::parser(data);
 
@@ -55,49 +94,54 @@ namespace task{
         if((now_cache = my_cache ->  get_entry(key)) != nullptr){
             
             std::shared_lock<std::shared_mutex> entry_lock(now_cache -> entry_mutex);
-            bool is_download;
-            {
-                is_download = now_cache -> data_manager -> is_download;
+
+            if(now_cache -> data_manager -> terminated){
+                // read_and_write_without_cache(buffer, data_from_server);
+            }else{
+
+                bool is_download = now_cache -> data_manager -> is_download;
+                if(is_download){
+                    read_from_cache_without_write(now_cache);
+                }
+                else{
+                    read_from_cache_with_write(now_cache);
+                }
             }
-        
-            if(is_download){
-                read_from_cache_without_write(now_cache);
-            }
-            else{;
-                read_from_cache_with_write(now_cache);
-            }
-            
         }
          else{
 
-            if(!connect_to_server(80, answer -> get_host(), &server)){
-                std::cout << "Ne poluchiloc' podkluychit'cay" << std::endl;
-                throw error::MyException("Big cock");
-            }
-            if(!send_data(server, buffer.get(), first_read_data)){
-                std::cout << "Problem s otpravkoy severu" << std::endl;
-                throw error::MyException("1 send to server problem");
-            }
+            std::shared_ptr<char[]> buffer = std::shared_ptr<char[]>(new char[startBufferSize], std::default_delete<char[]>());
 
-            if(!set_non_blocking(server)){
-                std::cout << "server not non_blocking" << std::endl;
-                throw error::MyException("server");
-            }
-
-            ssize_t data_from_server = readData(server, buffer, startBufferSize);
-
-            if(data_from_server <= 0){
-                throw error::MyException("Server don't answer first time");
-            }
-
-            if(data_from_server != startBufferSize){
-                buffer[data_from_server] = '\0';
-            }
             
-            std::string_view data1 = buffer.get();
+            // if(!connect_to_server(80, answer -> get_host(), &server)){
+            //     std::cout << "Ne poluchiloc' podkluychit'cay" << std::endl;
+            //     throw error::MyException("Big cock");
+            // }
+            // if(!send_data(server, buffer.get(), first_read_data)){
+            //     std::cout << "Problem s otpravkoy severu" << std::endl;
+            //     throw error::MyException("1 send to server problem");
+            // }
 
-            std::unique_ptr<answer::rezult_response> server_answer = parser::response::parser(data1);
+            // if(!set_non_blocking(server)){
+            //     std::cout << "server not non_blocking" << std::endl;
+            //     throw error::MyException("server");
+            // }
 
+            // ssize_t data_from_server = readData(server, buffer, startBufferSize);
+
+            // if(data_from_server <= 0){
+            //     throw error::MyException("Server don't answer first time");
+            // }
+
+            // if(data_from_server != startBufferSize){
+            //     buffer[data_from_server] = '\0';
+            // }
+            
+            // std::string_view data1 = buffer.get();
+
+            // std::unique_ptr<answer::rezult_response> server_answer = parser::response::parser(data1);
+            ssize_t data_from_server;
+            std::unique_ptr<answer::rezult_response> server_answer = connect_to_server_first_time_with_reddirect(answer->get_host(), buffer, first_read_data, buffer1, &data_from_server, 0);
 
             if(server_answer -> get_200() && server_answer -> get_version()){
                 
@@ -186,6 +230,7 @@ namespace task{
         std::cout << "WRITE" << std::endl;
 
         if(!shutdown){
+            cache_entry -> data_manager -> terminated_true();
             throw error::MyException("Terminated task");
         }
 
@@ -214,12 +259,14 @@ namespace task{
         while (write_to_cash < cash_size)
         {   
             if(!shutdown){
+                cache_entry -> data_manager -> terminated_true();
                 throw error::MyException("Terminated task");
             }
             data_from_server = readData(server, buffer, startBufferSize);
 
             if(data_from_server <= 0){
                 std::cout << "BIG CRUSH CASH" << std::endl;
+                cache_entry -> data_manager -> terminated_true();
                 throw error::MyException("BIG CRUSH");
             }
 
