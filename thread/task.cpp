@@ -265,7 +265,7 @@ namespace task{
             data_from_server = readData(server, buffer, startBufferSize);
 
             if(data_from_server <= 0){
-                std::cout << "BIG CRUSH CASH" << std::endl;
+                std::cout << "SERVER DON'T GIVE DATA. IT GIVE 0 BYTES" << std::endl;
                 cache_entry -> data_manager -> terminated_true();
                 throw error::MyException("BIG CRUSH");
             }
