@@ -333,6 +333,7 @@ namespace task{
 
     void task :: read_and_write_without_cache(std::shared_ptr<char[]> buffer, ssize_t data_from_server){
         ssize_t now_data_size = data_from_server;
+        std::cout << "WRITE WITHOUT CACHE" << std::endl;
         do{
             if(!shutdown){
                 throw error::MyException("Shutdown task");
