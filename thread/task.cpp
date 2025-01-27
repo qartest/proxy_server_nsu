@@ -168,6 +168,7 @@ namespace task{
                     }
 
                 }else{
+                    std::cout << "I HAVE NOT SIZE" << std::endl;
                     read_and_write_without_cache(buffer, data_from_server);
                 }
             }else{
