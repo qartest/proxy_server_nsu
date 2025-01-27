@@ -47,13 +47,21 @@ namespace thread{
         // std::cout << "Task added to queue, notifying one thread\n";
         threadManager.notify_one();
     }
-
-    thread_pool::~thread_pool(){
+    
+    void thread_pool::stop(){
         run = false;
+        run_task = false;
         threadManager.notify_all();
         for(auto& thread : threads){
             thread.join();
-            // std::cout << "Potock zakonchil rabotat'" << std::endl;
+            std::cerr << "Thread terminated\n";
         }
+    }
+
+    std::atomic_bool& thread_pool::give_for_task(){
+        return  run_task;
+    }
+    thread_pool::~thread_pool(){
+
     }
 }

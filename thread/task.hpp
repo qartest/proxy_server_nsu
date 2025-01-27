@@ -24,7 +24,8 @@ namespace task{
 
         const int startBufferSize = 16 * 1024;
 
-        bool& shutdown;
+        std::atomic_bool& shutdown;
+
         std::shared_ptr<cache::cache> my_cache;
 
         ssize_t readData(int fd, std::shared_ptr<char[]> buffer, ssize_t size);
@@ -40,7 +41,7 @@ namespace task{
     public:
 
         void run();
-        task(int client1, std::shared_ptr<cache::cache> cache, bool& shut);
+        task(int client1, std::shared_ptr<cache::cache> cache, std::atomic_bool& shut);
         ~task();
 
         

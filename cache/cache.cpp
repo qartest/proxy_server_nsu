@@ -21,7 +21,7 @@ namespace cache{
             std::unique_lock<std::shared_mutex> cache_lock(cache_mutex);
 
              auto now = std::chrono::steady_clock::now();
-            std::cout << "CASH HAVE " << cache_map.size() << " ATTEMPS" << std::endl;
+            std::cout << "CASH HAVE " << cache_map.size() << " NOTES" << std::endl;
             for (auto it = cache_map.begin(); it != cache_map.end();) {
                 
                 if(it->second->entry_mutex.try_lock()){
@@ -43,7 +43,7 @@ namespace cache{
                     }
 
                 } else {
-                    std::cout << "CAN'T TO INTO" << std::endl;
+                    std::cout << "GC CAN'T READ NOTE" << std::endl;
                     ++it;
                 }
             }
@@ -51,26 +51,26 @@ namespace cache{
         }
     }
 
-    std::shared_ptr<cache_entry> cache::add_entry(const std::string& key, size_t size){
+    std::pair<std::shared_ptr<cache_entry>, bool> cache::add_entry(const std::string& key, size_t size){
 
         std::unique_lock<std::shared_mutex> lock(cache_mutex);
         
 
         auto it = cache_map.find(key);
         if (it != cache_map.end()) {
-            return it->second; // Возвращаем существующую запись
+            return {it->second, false}; // Возвращаем существующую запись
         }
         
         if(size > max_cache_size - current_cache_size){
-            return nullptr;
-        }
+            return {nullptr, false};
+        } 
         else{
             current_cache_size += size;
         }
         auto entry = std::make_shared<cache_entry>(size);
         cache_map[key] = entry;
         std::cout << "Create cash " << size << std::endl;
-        return entry; 
+        return {entry, true}; 
     }
 
     bool cache::remove_entry(const std::string& key){
@@ -102,7 +102,9 @@ namespace cache{
     }
 
     void cache::delete_all_cache(){
-        std::cout << "I must delete all cache there" << std::endl;
+        // std::cout << "I must delete all cache there" << std::endl;
+        stop_gc = true;
+        gc_cv.notify_all();
     }
 
     cache::~cache()

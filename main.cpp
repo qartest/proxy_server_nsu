@@ -15,8 +15,9 @@
 size_t PORT = 8080;
 size_t THREADS = 4;
 size_t CACHE_MIN_SIZE = 1;
-size_t CACHE_MAX_SIZE = 12;
+size_t CACHE_MAX_SIZE = 5;
 size_t CACHE_TTL = 5;
+std::shared_ptr<Proxy::Proxy> PROXY;
 
 void sig_handler(int signal){
     if(signal == SIGINT){
@@ -24,7 +25,8 @@ void sig_handler(int signal){
     } else if(signal == SIGTERM){
         std::cout << "SIGSTERM" << std::endl;
     }
-    std::exit(1);    
+    PROXY.reset();
+    std::exit(0);    
 }
 int initHandlers(){
     struct sigaction sa;
@@ -127,7 +129,7 @@ int main(int argc, char** argv){
     }
 
     try{
-        std::shared_ptr<Proxy::Proxy> PROXY = std::make_shared<Proxy::Proxy>(PORT, THREADS, CACHE_MIN_SIZE, CACHE_MAX_SIZE, CACHE_TTL);
+        PROXY = std::make_shared<Proxy::Proxy>(PORT, THREADS, CACHE_MIN_SIZE, CACHE_MAX_SIZE, CACHE_TTL);
         std::cout << "Cerver zapustilc'a" << std::endl;
         PROXY ->start();
     }catch(error::MyException& e){

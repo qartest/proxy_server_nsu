@@ -33,7 +33,7 @@ namespace cache{
 
     public:
 
-        std::shared_ptr<cache_entry> add_entry(const std::string& key, size_t size);
+        std::pair<std::shared_ptr<cache_entry>, bool>  add_entry(const std::string& key, size_t size);
         std::shared_ptr<cache_entry> get_entry(const std::string& key);
 
         bool remove_entry(const std::string& key);

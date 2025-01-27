@@ -50,19 +50,24 @@ namespace Proxy{
             throw error::MyException("listen don't work");
         }
 
+        std::atomic_bool& for_run = thread_pool -> give_for_task();
+
         while(true){
             int clientSocket = accept(DescriptorSocket, NULL, NULL);
             if(clientSocket > 0){
-                thread_pool -> add_task(std::make_unique<task::task>(clientSocket, my_cache, shutBool));
+                thread_pool -> add_task(std::make_unique<task::task>(clientSocket, my_cache, for_run));
             }
         }
     }
 
     void Proxy :: shutdown() {
-
+        thread_pool -> stop();
     }
 
     Proxy :: ~Proxy(){
-
+        close(DescriptorSocket);
+        shutdown();
+        thread_pool.reset();
+        my_cache.reset();
     }   
 }

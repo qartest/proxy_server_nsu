@@ -22,12 +22,16 @@ namespace thread{
         std::condition_variable threadManager;
         std::atomic_bool run{true};
 
+        std::atomic_bool run_task{true};
+
         void work();
     public:
         thread_pool(int size);
 
         void add_task(std::unique_ptr<task::task> task);
         void clear();
+        void stop();
+        std::atomic_bool& give_for_task();
 
         // int size_task();
         ~thread_pool();

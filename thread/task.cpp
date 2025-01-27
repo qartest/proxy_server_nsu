@@ -2,10 +2,8 @@
 #include "iostream"
 #include "../utils/my_exception.hpp"
 
-
-
 namespace task{
-    task::task(int client1, std::shared_ptr<cache::cache> cache, bool& shut) : shutdown(shut){
+    task::task(int client1, std::shared_ptr<cache::cache> cache, std::atomic_bool& shut) : shutdown(shut){
         client = client1;
         my_cache = cache;
     }
@@ -56,14 +54,14 @@ namespace task{
 
         if((now_cache = my_cache ->  get_entry(key)) != nullptr){
             
-            std::unique_lock<std::shared_mutex> entry_lock(now_cache -> entry_mutex);
+            std::shared_lock<std::shared_mutex> entry_lock(now_cache -> entry_mutex);
             bool is_download;
             {
                 is_download = now_cache -> data_manager -> is_download;
             }
         
             if(is_download){
-                read_from_cache_without_write( now_cache);
+                read_from_cache_without_write(now_cache);
             }
             else{;
                 read_from_cache_with_write(now_cache);
@@ -76,7 +74,6 @@ namespace task{
                 std::cout << "Ne poluchiloc' podkluychit'cay" << std::endl;
                 throw error::MyException("Big cock");
             }
-
             if(!send_data(server, buffer.get(), first_read_data)){
                 std::cout << "Problem s otpravkoy severu" << std::endl;
                 throw error::MyException("1 send to server problem");
@@ -105,14 +102,25 @@ namespace task{
             if(server_answer -> get_200() && server_answer -> get_version()){
                 
                 if(server_answer -> get_size() > 0){
-                    std::shared_ptr<cache::cache_entry> cache_entry = my_cache -> add_entry(key, server_answer -> get_header() + server_answer -> get_size());
+                    auto cache_entry_pair = my_cache -> add_entry(key, server_answer -> get_header() + server_answer -> get_size());
 
-                    if(cache_entry == nullptr){
+                    if(cache_entry_pair.first == nullptr){
                         read_and_write_without_cache(buffer, data_from_server);
                     }
+                    else if(cache_entry_pair.second == false){    
+                        std::shared_lock<std::shared_mutex> entry_lock(cache_entry_pair.first -> entry_mutex);
+                        bool is_download = cache_entry_pair.first  -> data_manager -> is_download;
+                    
+                        if(is_download){
+                            read_from_cache_without_write(cache_entry_pair.first);
+                        }
+                        else{;
+                            read_from_cache_with_write(cache_entry_pair.first);
+                        }
+                    }
                     else{
-                        std::unique_lock<std::shared_mutex> entry_lock(cache_entry -> entry_mutex);
-                        write_with_cash(buffer, data_from_server, cache_entry);
+                        std::shared_lock<std::shared_mutex> entry_lock(cache_entry_pair.first -> entry_mutex);
+                        write_with_cash(buffer, data_from_server, cache_entry_pair.first);
                     }
 
                 }else{
@@ -127,6 +135,11 @@ namespace task{
 
 
     void task :: read_from_cache_with_write( std::shared_ptr<cache::cache_entry> now_cache){
+        std::cout << "READ WITH WRITE" << std::endl;
+
+        if(!shutdown){
+            throw error::MyException("Shutdown task");
+        }
 
         ssize_t current_read = 0;
         ssize_t size_cache = 0;
@@ -138,7 +151,9 @@ namespace task{
 
         ssize_t remainder;
         while(current_read < size_cache){
-
+            if(!shutdown){
+                throw error::MyException("Shutdown task");
+            }
             if(now_cache -> data_manager -> is_terminated()){
                 throw error::MyException("Terminated read with cash");
             }
@@ -168,6 +183,11 @@ namespace task{
     }
 
      void task :: write_with_cash(std::shared_ptr<char[]> buffer, ssize_t data_from_server, std::shared_ptr<cache::cache_entry> cache_entry){
+        std::cout << "WRITE" << std::endl;
+
+        if(!shutdown){
+            throw error::MyException("Terminated task");
+        }
 
         ssize_t write_to_cash = 0;
         ssize_t cash_size = 0;
@@ -193,6 +213,9 @@ namespace task{
 
         while (write_to_cash < cash_size)
         {   
+            if(!shutdown){
+                throw error::MyException("Terminated task");
+            }
             data_from_server = readData(server, buffer, startBufferSize);
 
             if(data_from_server <= 0){
@@ -226,7 +249,11 @@ namespace task{
     }
 
     void task :: read_from_cache_without_write( std::shared_ptr<cache::cache_entry> now_cache){
-        
+        std::cout << "READ WITHOUT WRITE" << std::endl;
+
+        if(!shutdown){
+            throw error::MyException("Shutdown task");
+        }
         ssize_t current_read = 0;
         ssize_t size_cache = 0;
         
@@ -234,7 +261,11 @@ namespace task{
         ssize_t remainder;
 
         while(current_read < size_cache){
-            
+
+            if(!shutdown){
+                throw error::MyException("Shutdown task");
+            }
+
             if(size_cache - current_read >= startBufferSize){
                 remainder = startBufferSize;
             }
@@ -256,6 +287,9 @@ namespace task{
     void task :: read_and_write_without_cache(std::shared_ptr<char[]> buffer, ssize_t data_from_server){
         ssize_t now_data_size = data_from_server;
         do{
+            if(!shutdown){
+                throw error::MyException("Shutdown task");
+            }
             if(send_data(client, buffer.get(), now_data_size) != now_data_size){
                 return;
             }
