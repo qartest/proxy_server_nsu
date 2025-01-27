@@ -15,7 +15,7 @@
 size_t PORT = 8080;
 size_t THREADS = 4;
 size_t CACHE_MIN_SIZE = 1;
-size_t CACHE_MAX_SIZE = 5;
+size_t CACHE_MAX_SIZE = 10;
 size_t CACHE_TTL = 5;
 std::shared_ptr<Proxy::Proxy> PROXY;
 
@@ -106,12 +106,13 @@ int parseInput(int argc, char** argv){
 
             CACHE_TTL = static_cast<size_t>(value);           
         } else {
-            std::cout << "Tlb EBOBO???" << std::endl;
-            std::cout << "Dayu Pomoch" << std::endl;
+            std::cout << "NOT RIGHT ARGUMENTS!!!!!!!!!" << std::endl;
+            std::cout << "I DON'T TAKE THIS ARGUMENTS" << std::endl;
+            return 1;
         }
     }
     if(CACHE_MAX_SIZE <= CACHE_MIN_SIZE){
-        std::cout << "Malen'kiy cache kak Bol'shoy, tak nel'z'a" << std::endl;
+        std::cout << "VERY BIG MIN_CASH" << std::endl;
         return 1;
     }
     return 0;
@@ -119,7 +120,7 @@ int parseInput(int argc, char** argv){
 }
 int main(int argc, char** argv){
     if(parseInput(argc, argv)){
-        std::cout << "problema s vvodom" << std::endl;
+        std::cout << "Problem with INPUT" << std::endl;
         return 1;
     }
 
@@ -130,7 +131,7 @@ int main(int argc, char** argv){
 
     try{
         PROXY = std::make_shared<Proxy::Proxy>(PORT, THREADS, CACHE_MIN_SIZE, CACHE_MAX_SIZE, CACHE_TTL);
-        std::cout << "Cerver zapustilc'a" << std::endl;
+        std::cout << "SERVER WORK" << std::endl;
         PROXY ->start();
     }catch(error::MyException& e){
         std::cout << e.what() << std::endl;
