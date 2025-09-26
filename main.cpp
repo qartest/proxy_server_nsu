@@ -11,6 +11,15 @@
 #include <string_view>
 
 #include "proxy/proxy.hpp"
+std::string_view HELP_INFO = 
+"Proxy flags:\n"
+"--help - information about proxy flags;\n"
+"--port=<int> - the port on which the proxy will listen (default value is 8080);\n"
+"--max-client-threads=<int> - the number of threads allocated for client processing (default value is 4);\n"
+"--cache-initial-size=<int(MB)> - the initial size of the cache (default value is 1 MB);\n"
+"--cache-max-size=<int(MB)> - the maximum size of the cache (default value is 10 MB);\n"
+"--cache-ttl=<int(seconds)> - the maximum TTL of cache record (default value is 5 seconds);\n";
+
 
 size_t PORT = 8080;
 size_t THREADS = 4;
@@ -64,7 +73,7 @@ int parseInput(int argc, char** argv){
         int value;
         std::string arg(argv[i]);
         if(arg == "--help"){
-            std::cout << "Dayu Pomoch" << std::endl;
+            std::cout << "HELP_INFO" << std::endl;
         }else if(arg.find("--port=") == 0){
             value = std::stoi(std::string(arg.substr(7)));
             if(value < 0 || value > 65535){
